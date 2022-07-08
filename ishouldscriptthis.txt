@@ -1,0 +1,40 @@
+## /etc/crontab
+*/10 * * * * d python3 /home/d/kronos/kronos-cron.py
+
+
+## /etc/systemd/system/kronos.service
+[Unit]
+Description=Discord BOT service
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+Environment=PYTHONUNBUFFERED=1
+User=d
+ExecStart=/usr/bin/env python3 /home/d/kronos/kronos.py
+
+[Install]
+WantedBy=multi-user.target
+
+## Log dir
+mkdir root:$LOGNAME --mode=770 /var/log/discord
+
+## /etc/logrotate.d/kronos
+/var/log/discord/*.log {
+        daily
+        missingok
+        rotate 30
+        compress
+        create 660 root d
+        sharedscripts
+        postrotate
+                systemctl start kronos
+        endscript
+        prerotate
+                systemctl stop kronos
+        endscript
+}
+
